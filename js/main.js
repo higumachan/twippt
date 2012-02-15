@@ -34,7 +34,7 @@ function draw ()
 	ctx2 = layer2.getContext('2d');
 
 	ctx2.font = "italic bold 30px 'ＭＳ Ｐゴシック'";
-	slides = load_slide(path, 2);
+	slides = load_slide(path, 3);
 	slides_index = 0;
 
 	listen_keybind();
@@ -74,20 +74,56 @@ function listen_keybind()
 	};
 }
 
+var i = 0;
+
+function animate_next()
+{
+	var max = 10;
+	ctx1.clearRect(0, 0, layer1.width, layer1.height);
+	ctx1.drawImage(slides[slides_index - 1], -(i * (layer1.width / max)), 0, -(i * (layer1.width / max)) + layer1.width, layer1.height);
+	ctx1.drawImage(slides[slides_index], layer1.width - (i * (layer1.width / max)), 0, layer1.width * 2 - (i * (layer1.width / max)), layer1.height);
+	i++;
+	if (i <= max){
+		setTimeout("animate_next()", 5);
+	}
+	else {
+		i = 0;
+	}
+}
+
+function animate_prev()
+{
+	var max = 10;
+	ctx1.clearRect(0, 0, layer1.width, layer1.height);
+	ctx1.drawImage(slides[slides_index], -((max - i - 1) * (layer1.width / max)), 0, -((max - i - 1) * (layer1.width / max)) + layer1.width, layer1.height);
+	ctx1.drawImage(slides[slides_index + 1], layer1.width - ((max - i - 1) * (layer1.width / max)), 0, layer1.width * 2 - ((max - i - 1) * (layer1.width / max)), layer1.height);
+	i++;
+	if (i < max){
+		setTimeout("animate_prev()", 5);
+	}
+	else {
+		i = 0;
+	}
+}
+
+
+
 function slide_next()
 {
 	if (slides_index < slides.length - 1){
 		slides_index++;
+		animate_next();
 	}
-	ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
+	//ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
 }
 
 function slide_prev()
 {
 	if (slides_index >= 1){
 		slides_index--;
+		animate_prev();
 	}
-	ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
+	//ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
 }
 
 
@@ -122,7 +158,7 @@ function string_to_datetime(time_string)
 function comment_add()
 {
 	
-	$.getJSON("/cgi-bin/get_hash.py", {tag : "test", max_id: ago_max_id}, function (json) {
+	$.getJSON("/cgi-bin/get_hash_sqlite.py", {tag : "settestset", slide: slides_index}, function (json) {
 		for (var i = 0; i < json.texts.length; i++){
 			comment = {
 				x: layer1.width,
@@ -131,7 +167,6 @@ function comment_add()
 			};
 			comments.push(comment);
 		}
-		ago_max_id = json.max_id;
 	});
 	
 }
@@ -139,7 +174,7 @@ function comment_add()
 function comment_draw()
 {
 	ctx2.clearRect(0, 0, layer2.width, layer2.height);
-	for (i = 0; i < comments.length; i++){
+	for (var i = 0; i < comments.length; i++){
 		ctx2.strokeText(comments[i].text, comments[i].x, comments[i].y);
 	}
 }
