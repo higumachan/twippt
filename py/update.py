@@ -6,8 +6,8 @@ from tweepy.auth import OAuthHandler
 from tweepy.api import API
 from datetime import timedelta
 from threading import Thread, Lock
-import sqlite3
 import datetime
+import MySQLdb
 import time;
 
 lock = Lock();
@@ -57,17 +57,15 @@ class TwitterThread(Thread):
         stream.filter(track=track);
 
 if __name__ == '__main__':
-    connector = sqlite3.connect("test.db");
+    connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="26nKZAzS");
     cursor = connector.cursor();
     auth = get_oauth()
     stream = Stream(auth, AbstractedlyListener())
     thread = TwitterThread();
-    #cursor.execute("SELECT tag FROM slide GROUP BY tag;");
-    #track = ['\#' + t[0] for t in cursor.fetchall()];
     track = ["#test",];
     thread.init(stream, track);
     thread.start();
-    cursor.execute("SELECT COUNT(id) FROM slide GROUP BY tag");
+    cursor.execute("SELECT COUNT(id) FROM tag");
     tag_count = cursor.fetchone()[0];
     while (True):
         start = time.time();
@@ -77,20 +75,25 @@ if __name__ == '__main__':
             for tw in tws:
                 cursor.execute("SELECT COUNT(id) FROM tweet");
                 tw_id = cursor.fetchone()[0];
-                connector.execute("INSERT INTO tweet VALUES('%s', 'false', '%s', -1, %s, '%s', '%s')" % (tw[0], tw[1], tw_id, tw[2], datetime.datetime.now().isoformat()));
+                cursor.execute("SELECT id, slide_id FROM tag_slide_relation WHERE tag = '%s'" % (tw[0],));
+                temp = cursor.fetchone();
+                tag_id = temp[0];
+                slide_id = temp[1];
+                cursor.execute("INSERT INTO tweet VALUES(%s, '%s', 'false', '%s', %s)" % (tw_id, tw[1], datetime.datetime.now().isoformat(), slide_id));
+                cursor.execute("INSERT INTO tag_tweet_relation VALUES(%s, %s, %s)" % (new_id, tag_id, tw_id));
             if (tws):
                 connector.commit();
             tws = [];
             lock.release();
         try:
-            cursor.execute("SELECT COUNT(id) FROM slide GROUP BY tag");
+            cursor.execute("SELECT COUNT(id) FROM tag");
         except:
             print "Ellor21"
         new_tag_count = cursor.fetchone()[0];
         if (new_tag_count > tag_count):
             stream.disconnect();
             try:
-                cursor.execute("SELECT tag FROM slide GROUP BY tag");
+                cursor.execute("SELECT COUNT(id) FROM tag");
             except:
                 print "Erorr";
             track = [t[0] for t in cursro.fetchall()];

@@ -1,11 +1,13 @@
+USE twippt;
+
 CREATE TABLE tag(
 	id INTEGER,
-	text CHAR(256)
+	text CHAR(100)
 );
 
 CREATE TABLE tweet(
 	id INTEGER,
-	text CHAR(256),
+	text CHAR(255),
 	flag BOOLEAN,
 	time DATETIME,
 	slide_id INTEGER
@@ -13,7 +15,8 @@ CREATE TABLE tweet(
 
 CREATE TABLE slide(
 	id INTEGER,
-	url CHAR(512)
+	name CHAR(255),
+	url CHAR(255)
 );
 
 CREATE TABLE tag_slide_relation (
