@@ -8,3 +8,5 @@ cursor = connector.cursor();
 cursor.execute("SELECT * FROM tweet")
 print cursor.fetchall();
 
+cursor.execute("SELECT * FROM slide")
+print cursor.fetchall();

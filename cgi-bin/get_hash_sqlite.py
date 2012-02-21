@@ -14,7 +14,7 @@ try:
     tag = form["tag"].value;
     slide = form["slide"].value;
 except:
-    tag = "settestset";
+    tag = "tekito";
     slide = "0";
 cursor.execute("SELECT text FROM tweet WHERE flag = 'false' AND tag = '%s';" % (tag,));
 rows = cursor.fetchall();

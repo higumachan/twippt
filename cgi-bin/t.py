@@ -9,7 +9,8 @@ CREATE TABLE tweet (
 	text CHAR (300),
 	slide INTEGER,
 	id INTEGER,
-	name CHAR(255)
+	name CHAR(255),
+    time DATETIME
 )""");
 
 

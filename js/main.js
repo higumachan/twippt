@@ -8,6 +8,7 @@ var tag = "haiku";
 var ago_datetime = new Date();
 var ago_max_id = 0;
 var count = 0;
+var draw_flag = false;
 
 onload = function () {
 	$.ajaxSetup({cache: false});
@@ -22,19 +23,20 @@ function dtoa(date){
 
 function draw ()
 {
-	layer1 = document.getElementById('layer1');
+	//layer1 = document.getElementById('layer1');
 	layer2 = document.getElementById('layer2');
-
-	layer1.width = window.innerWidth;
-	layer1.height = window.innerHeight;
+	top.test.focus();
+	//layer1.width = window.innerWidth;
+	//layer1.height = window.innerHeight;
 	layer2.width = window.innerWidth;
 	layer2.height = window.innerHeight;
 
-	ctx1 = layer1.getContext('2d');
+	//ctx1 = layer1.getContext('2d');
 	ctx2 = layer2.getContext('2d');
 
 	ctx2.font = "italic bold 30px 'ＭＳ Ｐゴシック'";
-	slides = load_slide(path, 3);
+	ctx2.fillStyle = "rgb(255, 255, 255)";
+	//slides = load_slide(path, 3);
 	slides_index = 0;
 
 	listen_keybind();
@@ -158,11 +160,11 @@ function string_to_datetime(time_string)
 function comment_add()
 {
 	
-	$.getJSON("/cgi-bin/get_hash_sqlite.py", {tag : "settestset", slide: slides_index}, function (json) {
+	$.getJSON("/cgi-bin/get_hash_sqlite.py", {tag : "test", slide: slides_index}, function (json) {
 		for (var i = 0; i < json.texts.length; i++){
 			comment = {
-				x: layer1.width,
-				y: Math.floor(Math.random() * layer1.height),
+				x: layer2.width,
+				y: Math.floor(Math.random() * layer2.height),
 				text: json.texts[i],
 			};
 			comments.push(comment);
@@ -174,8 +176,10 @@ function comment_add()
 function comment_draw()
 {
 	ctx2.clearRect(0, 0, layer2.width, layer2.height);
-	for (var i = 0; i < comments.length; i++){
-		ctx2.strokeText(comments[i].text, comments[i].x, comments[i].y);
+	if (draw_flag == true){
+		for (var i = 0; i < comments.length; i++){
+			ctx2.fillText(comments[i].text, comments[i].x, comments[i].y);
+		}
 	}
 }
 
@@ -183,5 +187,18 @@ function comment_move()
 {
 	for (var i = 0; i < comments.length; i++){
 		comments[i].x -= 10;
+	}
+}
+
+function toggle()
+{
+	d = $("#draw_ctrl");
+	if (draw_flag){
+		draw_flag = false;
+		d.attr("value", "on");
+	}
+	else {
+		draw_flag = true;
+		d.attr("value", "off");
 	}
 }
