@@ -5,18 +5,42 @@ var layer1, layer2;
 var comments = [{text:"test", x: 2000, y: 100}];
 var path = "img/";
 var tag = "haiku";
-var name = "";
 var ago_datetime = new Date();
 var ago_max_id = 0;
 var count = 0;
 var draw_flag = false;
+var DEBUG = true;
 
 onload = function () {
 	$.ajaxSetup({cache: false});
+	draw();
 	var dict = getRequest();
 	name = dict["name"];
-	draw();
+	initWebSocket(7000);
 };
+
+function initWebSocket(port)
+{
+	ws = new WebSocket("ws://localhost:" + port);
+	ws.onopen = function (e) {
+		if (DEBUG == true){
+			alert("onopen");
+		}
+		this.send(name);
+	}
+	ws.onclose = function (e) {
+		if (DEBUG == true){
+			alert("onclose");
+		}
+	}
+	ws.onmessage = function (e) {
+		if (DEBUG == true){
+			alert("onmassage");
+		}
+		text = e.data;
+		comment_add(text);
+	}
+}
 
 function dtoa(date){
 	date_string = date.getFullYear()  + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + ("0" + date.getDate()).slice(-2) + "T" + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2) + ":" + ("0" + date.getSeconds()).slice(-2);
@@ -28,6 +52,7 @@ function draw ()
 {
 	//layer1 = document.getElementById('layer1');
 	layer2 = document.getElementById('layer2');
+	top.test.focus();
 	//layer1.width = window.innerWidth;
 	//layer1.height = window.innerHeight;
 	layer2.width = window.innerWidth;
@@ -55,7 +80,12 @@ function load_slide(path, count)
 	};
 	image.src = file;
 	result.push(image);
-	for (var i = 1; i < count; i++)
+	for (var i = 1; i < count; i++){
+		file = path + "img" + i + ".jpg";
+		image = new Image();
+		image.src = file;
+		result.push(image);
+	}
 
 	return (result);
 }
@@ -75,64 +105,9 @@ function listen_keybind()
 
 var i = 0;
 
-function animate_next()
-{
-	var max = 10;
-	ctx1.clearRect(0, 0, layer1.width, layer1.height);
-	ctx1.drawImage(slides[slides_index - 1], -(i * (layer1.width / max)), 0, -(i * (layer1.width / max)) + layer1.width, layer1.height);
-	ctx1.drawImage(slides[slides_index], layer1.width - (i * (layer1.width / max)), 0, layer1.width * 2 - (i * (layer1.width / max)), layer1.height);
-	i++;
-	if (i <= max){
-		setTimeout("animate_next()", 5);
-	}
-	else {
-		i = 0;
-	}
-}
-
-function animate_prev()
-{
-	var max = 10;
-	ctx1.clearRect(0, 0, layer1.width, layer1.height);
-	ctx1.drawImage(slides[slides_index], -((max - i - 1) * (layer1.width / max)), 0, -((max - i - 1) * (layer1.width / max)) + layer1.width, layer1.height);
-	ctx1.drawImage(slides[slides_index + 1], layer1.width - ((max - i - 1) * (layer1.width / max)), 0, layer1.width * 2 - ((max - i - 1) * (layer1.width / max)), layer1.height);
-	i++;
-	if (i < max){
-		setTimeout("animate_prev()", 5);
-	}
-	else {
-		i = 0;
-	}
-}
-
-
-
-function slide_next()
-{
-	if (slides_index < slides.length - 1){
-		slides_index++;
-		animate_next();
-	}
-	//ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
-}
-
-function slide_prev()
-{
-	if (slides_index >= 1){
-		slides_index--;
-		animate_prev();
-	}
-	//ctx1.drawImage(slides[slides_index], 0, 0, layer1.width, layer1.height);
-}
-
-
 
 function comment_update()
 {
-	// get comment twitter
-	if (count % 50 == 0){
-		comment_add();
-	}
 	comment_move();
 	comment_draw();
 
@@ -154,19 +129,15 @@ function string_to_datetime(time_string)
 }
 
 
-function comment_add()
+function comment_add(text)
 {
 	
-	$.getJSON("/cgi-bin/get_hash_sql.py", {"name" : name, slide: slides_index}, function (json) {
-		for (var i = 0; i < json.texts.length; i++){
-			comment = {
-				x: layer2.width,
-				y: Math.floor(Math.random() * layer2.height),
-				text: json.texts[i],
-			};
-			comments.push(comment);
-		}
-	});
+	comment = {
+		x: layer2.width,
+		y: Math.floor(Math.random() * layer2.height),
+		text: text,
+	};
+	comments.push(comment);
 	
 }
 
@@ -190,12 +161,12 @@ function comment_move()
 function toggle()
 {
 	d = $("#draw_ctrl");
-	if (draw_flag == true){
+	if (draw_flag){
 		draw_flag = false;
-		d.attr("value", "off");
+		d.attr("value", "on");
 	}
 	else {
 		draw_flag = true;
-		d.attr("value", "on");
+		d.attr("value", "off");
 	}
 }

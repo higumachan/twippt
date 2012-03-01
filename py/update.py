@@ -44,6 +44,8 @@ class AbstractedlyListener(StreamListener):
         print lst;
         text = lst[0] + lst[1];
         lock.acquire();
+        tag = MySQLdb.escape_string(tag.encode("utf-8"));
+        text = MySQLdb.escape_string(text.encode("utf-8"));
         tws.append((tag, text, "tekito"));
         lock.release();
         
@@ -54,10 +56,10 @@ class TwitterThread(Thread):
         self.stream = stream;
         self.track = track;
     def run(self):
-        stream.filter(track=track);
+        self.stream.filter(track=track);
 
 if __name__ == '__main__':
-    connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="26nKZAzS");
+    connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="26nKZAzS", charset="utf8");
     cursor = connector.cursor();
     auth = get_oauth()
     stream = Stream(auth, AbstractedlyListener())
@@ -69,18 +71,24 @@ if __name__ == '__main__':
     tag_count = cursor.fetchone()[0];
     while (True):
         start = time.time();
-        while (time.time() - start):
+        print start, time.time() - start < 10
+        while (time.time() - start < 10):
             time.sleep(1);
             lock.acquire();
             for tw in tws:
-                cursor.execute("SELECT COUNT(id) FROM tweet");
-                tw_id = cursor.fetchone()[0];
-                cursor.execute("SELECT id, slide_id FROM tag_slide_relation WHERE tag = '%s'" % (tw[0],));
-                temp = cursor.fetchone();
-                tag_id = temp[0];
-                slide_id = temp[1];
-                cursor.execute("INSERT INTO tweet VALUES(%s, '%s', 'false', '%s', %s)" % (tw_id, tw[1], datetime.datetime.now().isoformat(), slide_id));
-                cursor.execute("INSERT INTO tag_tweet_relation VALUES(%s, %s, %s)" % (new_id, tag_id, tw_id));
+                print tw[0], track;
+                if ('#' + tw[0] in track):
+                    cursor.execute("SELECT COUNT(id) FROM tweet");
+                    tw_id = cursor.fetchone()[0];
+                    cursor.execute("SELECT id FROM tag WHERE text = '%s'" % (tw[0],));
+                    tag_id = cursor.fetchone()[0];
+                    cursor.execute("SELECT slide_id FROM tag_slide_relation WHERE tag_id = %s" % (tag_id,));
+                    temp = cursor.fetchone();
+                    slide_id = temp[0];
+                    cursor.execute("INSERT INTO tweet VALUES(%s, '%s', false, '%s', %s)" % (tw_id, tw[1], datetime.datetime.now().replace(microsecond=0).isoformat(), slide_id));
+                    cursor.execute("SELECT COUNT(id) FROM tag_tweet_relation");
+                    new_id = cursor.fetchone()[0];
+                    cursor.execute("INSERT INTO tag_tweet_relation VALUES(%s, %s, %s)" % (new_id, tag_id, tw_id));
             if (tws):
                 connector.commit();
             tws = [];
@@ -90,14 +98,18 @@ if __name__ == '__main__':
         except:
             print "Ellor21"
         new_tag_count = cursor.fetchone()[0];
-        if (new_tag_count > tag_count):
-            stream.disconnect();
+        if (new_tag_count > len(track)):
+            print "Came Change Track";
             try:
-                cursor.execute("SELECT COUNT(id) FROM tag");
+                cursor.execute("SELECT text FROM tag");
             except:
                 print "Erorr";
-            track = [t[0] for t in cursro.fetchall()];
+            track = ['#' +  t[0] for t in cursor.fetchall()];
+            print track;
+            stream.disconnect();
+            thread = TwitterThread();
             thread.init(stream, track);
-            thread.run();
+            thread.start();
+
     cursor.close();
     connector.close();

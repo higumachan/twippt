@@ -160,7 +160,7 @@ function string_to_datetime(time_string)
 function comment_add()
 {
 	
-	$.getJSON("/cgi-bin/get_hash_sqlite.py", {tag : "test", slide: slides_index}, function (json) {
+	$.getJSON("/cgi-bin/get_hash_sql.py", {tag : "test", slide: slides_index}, function (json) {
 		for (var i = 0; i < json.texts.length; i++){
 			comment = {
 				x: layer2.width,
