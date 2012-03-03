@@ -9,7 +9,7 @@ var ago_datetime = new Date();
 var ago_max_id = 0;
 var count = 0;
 var draw_flag = false;
-var DEBUG = true;
+var DEBUG = false;
 
 onload = function () {
 	$.ajaxSetup({cache: false});

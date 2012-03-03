@@ -42,11 +42,13 @@ def handle(client, connection):
         if (len(recv_data) == 0 or ord(recv_data[0]) & 0xf == 0x8):
             connection.send("\x88");
             break;
-    print "end";
+    print "-" * 100;
+    print "connect_end";
+    print "-" * 100;
     lock.acquire();
     clients.remove(client);
     lock.release();
-    s.close();
+    connection.close();
 
 
 
@@ -129,27 +131,29 @@ class Client:
 class MyStreamListener(StreamListener):
     def on_status(self, status):
         status.created_at += timedelta(hours=9)
+        tags = [];
         text = status.text;
-        start_index = text.find('#');
-        print text[start_index + 1:];
-        end_index = text[start_index:].find(" ");
-        if (end_index == -1):
-            end_index = len(text);
-        elif (len(text) != end_index + start_index):
-            end_index = end_index + start_index;
+        while (True):
+            start_index = text.find('#');
+            if (start_index == -1):
+                break;
+            end_index = text[start_index:].find(" ");
+            if (end_index == -1):
+                end_index = len(text);
+            elif (len(text) != end_index + start_index):
+                end_index = end_index + start_index;
 
-        print "start_index:" + str(start_index);
-        print "end_index:" + str(end_index);
-        tag = text[start_index + 1 : end_index];
-        print "tag:" + tag;
-        lst = text.split("#" + tag, 2);
-        print lst;
-        text = lst[0] + lst[1];
+            tag = text[start_index + 1 : end_index];
+            tags.append(tag);
+            lst = text.split("#" + tag, 1);
+            text = lst[0] + lst[1];
         lock = threading.Lock();
         lock.acquire();
         for client in clients:
-            if (client.is_handshaked() == True and client.is_listen_tag(tag) == True):
-                client.send(text);
+            for tag in tags:
+                if (client.is_handshaked() == True and client.is_listen_tag(tag) == True):
+                    client.send(text);
+                    break;
         lock.release();
         
         print(u"{text}".format(text=status.text))
