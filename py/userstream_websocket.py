@@ -170,7 +170,7 @@ class TwitterThread(Thread):
 def track_controler(track, stream):
     now_track = track;
     while (1):
-        connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="26nKZAzS", charset="utf8");
+        connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="dameyo", charset="utf8");
         cursor = connector.cursor();
         cursor.execute("SELECT text FROM tag");
         new_track = [str("#" + t[0]) for t in cursor.fetchall()];
