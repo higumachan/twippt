@@ -90,7 +90,7 @@ class Client:
     def recv_init_data(self):
         self._name = self.recv();
         print self._name;
-        connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="26nKZAzS", charset="utf8");
+        connector = MySQLdb.connect(host="localhost", db='twippt', user="root", passwd="dameyo", charset="utf8");
         cursor = connector.cursor();
         cursor.execute("SELECT id FROM slide WHERE name = '%s'" % self._name);
         temp = cursor.fetchone();
